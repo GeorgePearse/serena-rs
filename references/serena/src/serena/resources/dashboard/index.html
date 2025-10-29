@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serena Dashboard</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="serena-icon-16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="serena-icon-32.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="serena-icon-48.png">
+    <link rel="stylesheet" href="dashboard.css">
+    <script src="jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <script src="dashboard.js"></script>
+</head>
+
+<body>
+    <header class="header">
+        <div class="logo-container">
+            <img id="serena-logo" src="serena-logs.png" alt="Serena">
+        </div>
+        <nav class="header-nav">
+            <button id="theme-toggle" class="theme-toggle">
+                <span id="theme-icon">🌙</span>
+                <span id="theme-text">Dark</span>
+            </button>
+            <button id="menu-toggle" class="menu-button">
+                <span>☰</span>
+                <span>Menu</span>
+            </button>
+            <div id="menu-dropdown" class="menu-dropdown" style="display:none">
+                <a href="#" data-page="overview" class="active">Overview</a>
+                <a href="#" data-page="logs">Logs</a>
+                <a href="#" data-page="stats">Advanced Stats</a>
+                <hr>
+                <a href="#" id="menu-shutdown">Shutdown Server</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Overview Page (Landing) -->
+    <div id="page-overview" class="page-view">
+        <div class="overview-container">
+            <div class="overview-left">
+                <section class="config-section">
+                    <h2>Current Configuration</h2>
+                    <div id="config-display">
+                        <div class="loading">Loading configuration...</div>
+                    </div>
+                </section>
+
+                <section class="basic-stats-section">
+                    <h2>Tool Usage</h2>
+                    <div id="basic-stats-display">
+                        <div class="loading">Loading stats...</div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="overview-right">
+                <section class="projects-section">
+                    <h2 class="collapsible-header" id="projects-header">
+                        <span>Registered Projects</span>
+                        <span class="toggle-icon">▼</span>
+                    </h2>
+                    <div id="projects-display" class="collapsible-content" style="display:none">
+                        <div class="loading">Loading projects...</div>
+                    </div>
+                </section>
+
+                <section class="projects-section">
+                    <h2 class="collapsible-header" id="available-tools-header">
+                        <span>Available Tools (Disabled)</span>
+                        <span class="toggle-icon">▼</span>
+                    </h2>
+                    <div id="available-tools-display" class="collapsible-content" style="display:none">
+                        <div class="loading">Loading tools...</div>
+                    </div>
+                </section>
+
+                <section class="projects-section">
+                    <h2 class="collapsible-header" id="available-modes-header">
+                        <span>Available Modes</span>
+                        <span class="toggle-icon">▼</span>
+                    </h2>
+                    <div id="available-modes-display" class="collapsible-content" style="display:none">
+                        <div class="loading">Loading modes...</div>
+                    </div>
+                </section>
+
+                <section class="projects-section">
+                    <h2 class="collapsible-header" id="available-contexts-header">
+                        <span>Available Contexts</span>
+                        <span class="toggle-icon">▼</span>
+                    </h2>
+                    <div id="available-contexts-display" class="collapsible-content" style="display:none">
+                        <div class="loading">Loading contexts...</div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logs Page -->
+    <div id="page-logs" class="page-view" style="display:none">
+        <div class="controls">
+            <button id="load-logs" class="btn">Reload Log</button>
+        </div>
+        <div id="error-container"></div>
+        <div id="log-container" class="log-container"></div>
+    </div>
+
+    <!-- Advanced Stats Page -->
+    <div id="page-stats" class="page-view" style="display:none">
+        <div class="controls">
+            <button id="refresh-stats" class="btn">Refresh Stats</button>
+            <button id="clear-stats" class="btn">Clear Stats</button>
+        </div>
+
+        <div id="stats-summary" style="margin-bottom:20px; text-align:center;"></div>
+        <div id="estimator-name" style="text-align:center; margin-bottom:10px;"></div>
+        <div id="no-stats-message" style="text-align:center; color:var(--text-muted); font-style:italic; display:none;">
+            No tool stats collected yet.
+        </div>
+
+        <div class="charts-container">
+            <div class="chart-group">
+                <h3>Tool Calls</h3>
+                <canvas id="count-chart" height="200"></canvas>
+            </div>
+            <div class="chart-group">
+                <h3>Input Tokens</h3>
+                <canvas id="input-chart" height="200"></canvas>
+            </div>
+            <div class="chart-group">
+                <h3>Output Tokens</h3>
+                <canvas id="output-chart" height="200"></canvas>
+            </div>
+            <div class="chart-group chart-wide">
+                <h3>Input vs Output Tokens</h3>
+                <canvas id="tokens-chart" height="120"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            const dashboard = new Dashboard();
+        });
+    </script>
+</body>
+
+</html>
