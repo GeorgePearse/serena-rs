@@ -3,11 +3,16 @@ mod memory;
 mod symbols;
 mod workflow;
 
-use serde_json::json;
+use std::{
+    env, fs,
+    path::{Path, PathBuf},
+};
 
-use crate::tool::{Tool, ToolHandler, ToolRegistry};
+use anyhow::{Context, Result};
 
-/// Build a registry populated with stub implementations for the core tool families.
+use crate::tool::ToolRegistry;
+
+/// Build a tool registry populated with the implemented tool families.
 pub fn build_registry() -> ToolRegistry {
     let mut registry = ToolRegistry::new();
 
@@ -19,27 +24,41 @@ pub fn build_registry() -> ToolRegistry {
     registry
 }
 
-fn stub_handler(message: &str) -> ToolHandler {
-    let message = message.to_owned();
-    Box::new(move |_params| Ok(json!({ "status": "not_implemented", "message": message })))
+/// Resolve the directory used to persist mutable tool state.
+pub(crate) fn state_dir() -> Result<PathBuf> {
+    if let Ok(dir) = env::var("SERENA_STATE_DIR") {
+        let path = PathBuf::from(dir);
+        fs::create_dir_all(&path)
+            .with_context(|| format!("Failed to create state dir at {path:?}"))?;
+        return Ok(path);
+    }
+
+    let home = env::var("HOME").context("HOME environment variable is not set")?;
+    let path = Path::new(&home).join(".serena-mcp");
+    fs::create_dir_all(&path).with_context(|| format!("Failed to create state dir at {path:?}"))?;
+    Ok(path)
 }
 
-fn simple_schema() -> serde_json::Value {
-    json!({
-        "type": "object",
-        "properties": {
-            "payload": { "type": "object" }
-        },
-        "additionalProperties": true
-    })
+/// Convenience helper for working with stable state files.
+pub(crate) fn state_file(name: &str) -> Result<PathBuf> {
+    Ok(state_dir()?.join(name))
 }
 
-fn register_stub(registry: &mut ToolRegistry, name: &str, description: &str) {
-    let tool = Tool::new(
-        name,
-        description,
-        simple_schema(),
-        stub_handler(description),
-    );
-    registry.register(tool);
+/// Expand `~` and resolve relative paths against the current directory.
+pub(crate) fn resolve_path(path: &str) -> Result<PathBuf> {
+    if path.trim().is_empty() {
+        anyhow::bail!("Path cannot be empty");
+    }
+
+    if path.starts_with("~/") {
+        let home = env::var("HOME").context("HOME environment variable is not set")?;
+        return Ok(PathBuf::from(home).join(path.trim_start_matches("~/")));
+    }
+
+    let candidate = PathBuf::from(path);
+    if candidate.is_absolute() {
+        Ok(candidate)
+    } else {
+        Ok(env::current_dir()?.join(candidate))
+    }
 }
